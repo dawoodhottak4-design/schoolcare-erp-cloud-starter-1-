@@ -1,0 +1,16 @@
+{
+  "name": "schoolcare-erp-cloud",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SchoolCare ERP with Supabase and WhatsApp Cloud API backend",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.57.0",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
+  }
+}
