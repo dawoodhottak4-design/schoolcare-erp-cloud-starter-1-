@@ -4,6 +4,10 @@ const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
 const app = express();
 app.use(express.json({limit:'100kb'}));
+app.use('/api', (req, res, next) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  next();
+});
 app.use(express.static(path.join(__dirname,'public')));
 const PORT = process.env.PORT || 3000;
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -26,14 +30,30 @@ app.post('/api/students',needDb,async(req,res)=>{
  if(se){await db.from('parents').delete().eq('id',p.id);return res.status(400).json({error:se.message})}
  res.status(201).json({student:s,parent:p});
 });
+app.delete('/api/students/:id',needDb,async(req,res)=>{
+ const id=Number(req.params.id);
+ if(!Number.isInteger(id)||id<1)return res.status(400).json({error:'Invalid student ID.'});
+ const {data:student}=await db.from('students').select('id,parent_id').eq('id',id).single();
+ if(!student)return res.status(404).json({error:'Student not found.'});
+ const {data:atts}=await db.from('attendance').select('id').eq('student_id',id);
+ const attIds=(atts||[]).map(a=>a.id);
+ if(attIds.length>0){await db.from('notifications').delete().in('attendance_id',attIds);}
+ await db.from('attendance').delete().eq('student_id',id);
+ const {error:delErr}=await db.from('students').delete().eq('id',id);
+ if(delErr)return res.status(400).json({error:delErr.message});
+ if(student.parent_id){
+  const {data:siblings}=await db.from('students').select('id').eq('parent_id',student.parent_id);
+  if(!siblings||siblings.length===0){await db.from('parents').delete().eq('id',student.parent_id);}
+ }
+ res.json({success:true});
+});
 async function sendWhatsAppTemplate({phone,student,status,date}){
  const {WA_ACCESS_TOKEN,WA_PHONE_NUMBER_ID,WA_TEMPLATE_NAME}=process.env;
  if(!WA_ACCESS_TOKEN||!WA_PHONE_NUMBER_ID||!WA_TEMPLATE_NAME)return {sent:false,status:'Pending',reason:'WhatsApp Cloud API credentials/template are not configured on the server.'};
  const version=process.env.WA_GRAPH_VERSION||'v23.0';
  const language=process.env.WA_TEMPLATE_LANGUAGE||'en_US';
- // Expected approved template body variables: {{1}} student, {{2}} attendance status, {{3}} date.
  const body={messaging_product:'whatsapp',to:phone,type:'template',template:{name:WA_TEMPLATE_NAME,language:{code:language},components:[{type:'body',parameters:[{type:'text',text:student},{type:'text',text:status},{type:'text',text:date}]}]}};
- const response=await fetch(`https://graph.facebook.com/${version}/${WA_PHONE_NUMBER_ID}/messages`,{method:'POST',headers:{Authorization:`Bearer ${WA_ACCESS_TOKEN}`,'Content-Type':'application/json'},body:JSON.stringify(body)});
+ const response=await fetch(`https://facebook.com{version}/${WA_PHONE_NUMBER_ID}/messages`,{method:'POST',headers:{Authorization:`Bearer ${WA_ACCESS_TOKEN}`,'Content-Type':'application/json'},body:JSON.stringify(body)});
  const data=await response.json();
  if(!response.ok) return {sent:false,status:'Failed',reason:data?.error?.message||JSON.stringify(data)};
  return {sent:true,status:'Sent',messageId:data?.messages?.[0]?.id||null};
