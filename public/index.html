@@ -197,3 +197,26 @@ function deleteStudent(id, name) {
 
 function loadRecords() {
   return api('/records').then(function(d) {
+    $('studentsRows').innerHTML = d.students.map(function(s) {
+      var safeName = escapeHtml(s.student_name).replace(/'/g, "\\'");
+      return '<tr><td>' + escapeHtml(s.student_name) + '</td><td>' + escapeHtml(s.admission_number || '—') + '</td><td>' + escapeHtml(s.class_name || '—') + '</td><td>' + escapeHtml((s.parents && s.parents.parent_name) || '—') + '</td><td>' + escapeHtml((s.parents && s.parents.whatsapp_number) || '—') + '</td><td style="text-align:right"><button type="button" class="btn btn-del" onclick="deleteStudent(' + s.id + ',\'' + safeName + '\')">Delete</button></td></tr>';
+    }).join('') || '<tr><td colspan="6" style="color:#64748b">No students yet.</td></tr>';
+
+    $('attendanceRows').innerHTML = d.attendance.map(function(a) {
+      return '<tr><td>' + escapeHtml(a.attendance_date) + '</td><td>' + escapeHtml((a.students && a.students.student_name) || '—') + '</td><td>' + escapeHtml((a.students && a.students.class_name) || '—') + '</td><td>' + escapeHtml(a.status) + '</td><td>' + escapeHtml(a.notification_status || 'Not sent') + '</td></tr>';
+    }).join('') || '<tr><td colspan="5" style="color:#64748b">No attendance yet.</td></tr>';
+  }).catch(function(e) { msg('globalMsg', e.message, false); });
+}
+
+function refreshRecords() {
+  var b = $('refreshBtn');
+  b.textContent = 'Refreshing…';
+  loadRecords().then(function() { b.textContent = 'Refresh'; });
+}
+
+health();
+loadStudents();
+</script>
+</body>
+</html>
+
