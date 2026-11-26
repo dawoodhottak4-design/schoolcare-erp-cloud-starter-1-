@@ -56,8 +56,7 @@ async function sendWhatsAppTemplate({phone,student,status,date}){
  const response=await fetch(`https://facebook.com{version}/${WA_PHONE_NUMBER_ID}/messages`,{method:'POST',headers:{Authorization:`Bearer ${WA_ACCESS_TOKEN}`,'Content-Type':'application/json'},body:JSON.stringify(body)});
  const data=await response.json();
  if(!response.ok) return {sent:false,status:'Failed',reason:data?.error?.message||JSON.stringify(data)};
- const msgId=(data&&data.messages&&data.messages[0])?data.messages[0].id:null;
- return {sent:true,status:'Sent',messageId:msgId};
+ return {sent:true,status:'Sent'};
 }
 app.post('/api/attendance',needDb,async(req,res)=>{
  const b=req.body||{};const studentId=Number(b.student_id);const date=clean(b.attendance_date);const status=clean(b.status);
