@@ -52,9 +52,9 @@ footer{max-width:1100px;margin:28px auto 0;font-size:12px;color:#64748b}
 </header>
 <main>
 <nav>
-<button class="tab active" data-tab="students">Students & Parents</button>
-<button class="tab" data-tab="attendance">Mark Attendance</button>
-<button class="tab" data-tab="records">Records</button>
+<button type="button" class="tab active" onclick="showTab('students', this)">Students & Parents</button>
+<button type="button" class="tab" onclick="showTab('attendance', this)">Mark Attendance</button>
+<button type="button" class="tab" onclick="showTab('records', this)">Records</button>
 </nav>
 <section id="students" class="tabpane card">
 <h2>Student & Parent Registration</h2>
@@ -82,7 +82,7 @@ footer{max-width:1100px;margin:28px auto 0;font-size:12px;color:#64748b}
 <section id="records" class="tabpane card hidden">
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
 <div><h2>School Records</h2><p class="desc" style="margin:0">Latest students and attendance entries.</p></div>
-<button id="refreshBtn" class="btn btn-sec" type="button">Refresh</button>
+<button id="refreshBtn" class="btn btn-sec" type="button" onclick="refreshRecords()">Refresh</button>
 </div>
 <h3>Students</h3>
 <div class="tbl-wrap"><table><thead><tr><th>Student</th><th>Admission #</th><th>Class</th><th>Parent</th><th>WhatsApp</th><th style="text-align:right">Action</th></tr></thead><tbody id="studentsRows"></tbody></table></div>
@@ -118,16 +118,14 @@ function api(path, options) {
   });
 }
 
-document.querySelectorAll('.tab').forEach(function(b) {
-  b.addEventListener('click', function() {
-    document.querySelectorAll('.tab').forEach(function(x) { x.classList.remove('active'); });
-    b.classList.add('active');
-    document.querySelectorAll('.tabpane').forEach(function(x) { x.classList.add('hidden'); });
-    $(b.dataset.tab).classList.remove('hidden');
-    if (b.dataset.tab === 'records') loadRecords();
-    if (b.dataset.tab === 'attendance') loadStudents();
-  });
-});
+function showTab(tabId, btn) {
+  document.querySelectorAll('.tab').forEach(function(x) { x.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  document.querySelectorAll('.tabpane').forEach(function(x) { x.classList.add('hidden'); });
+  $(tabId).classList.remove('hidden');
+  if (tabId === 'records') loadRecords();
+  if (tabId === 'attendance') loadStudents();
+}
 
 function health() {
   api('/health').then(function(h) {
