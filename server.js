@@ -84,7 +84,7 @@ async function sendWhatsAppTemplate({phone,student,status,date}){
  const language=process.env.WA_TEMPLATE_LANGUAGE||'en';
  const payload={messaging_product:'whatsapp',to:phone,type:'template',template:{name:WA_TEMPLATE_NAME,language:{code:language},components:[{type:'body',parameters:[{type:'text',text:student},{type:'text',text:status},{type:'text',text:date}]}]}};
  try {
-  const response = await postJson('://facebook.com', `/${version}/${WA_PHONE_NUMBER_ID}/messages`, WA_ACCESS_TOKEN, payload);
+  const response = await postJson('graph.facebook.com', `/${version}/${WA_PHONE_NUMBER_ID}/messages`, WA_ACCESS_TOKEN, payload);
   if(!response.ok) return {sent:false,status:'Failed',reason:response.data?.error?.message||response.raw||'Meta API error'};
   return {sent:true,status:'Sent'};
  } catch (err) {
